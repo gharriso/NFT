@@ -1,5 +1,11 @@
 require('dotenv').config();
+const IPFS = require( 'ipfs-core');
+
+
+
 const API_URL = process.env.API_URL;
+const METADATA_CID = process.env.METADATA_CID;
+
 const {
     createAlchemyWeb3
 } = require("@alch/alchemy-web3");
@@ -52,6 +58,15 @@ async function mintNFT(tokenURI) {
         .catch((err) => {
             console.log(" Promise failed:", err);
         });
-} 
+}
 
-mintNFT("https://ipfs.io/ipfs/QmNpNd35ETLCaYSTEfXvD9y4xdwAjjDGiihgBXhThoyx8d");
+async function main() {
+    const ipfs = await IPFS.create();
+    for await (const file of ipfs.ls(METADATA_CID)) {
+        console.log(file.name,' ',file.cid);
+        await mintNFT(`https://ipfs.io/ipfs/${file.cid}`);
+    }
+    process.exit(0);
+}
+main();
+//
