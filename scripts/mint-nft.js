@@ -1,5 +1,5 @@
 require('dotenv').config();
-const IPFS = require( 'ipfs-core');
+const IPFS = require('ipfs-core');
 
 
 
@@ -31,39 +31,35 @@ async function mintNFT(tokenURI) {
             .createNFT(METAMASK_PUBLIC_KEY, tokenURI)
             .encodeABI(), // call the createNFT function from our OsunRiverNFT.sol file and pass the account that should receive the minted NFT.
     };
-    const signPromise = alchemyWeb3.eth.accounts.signTransaction(
+
+    const signedTx = await alchemyWeb3.eth.accounts.signTransaction(
         tx,
         METAMASK_PRIVATE_KEY
     );
-    signPromise
-        .then((signedTx) => {
-            alchemyWeb3.eth.sendSignedTransaction(
-                signedTx.rawTransaction,
-                function (err, hash) {
-                    if (!err) {
-                        console.log(
-                            "The hash of our transaction is: ",
-                            hash,
-                            "\nCheck Alchemy's Mempool to view the status of our transaction!"
-                        );
-                    } else {
-                        console.log(
-                            "Something went wrong when submitting our transaction:",
-                            err
-                        );
-                    }
-                }
-            );
-        })
-        .catch((err) => {
-            console.log(" Promise failed:", err);
-        });
+    await alchemyWeb3.eth.sendSignedTransaction(
+        signedTx.rawTransaction,
+        function (err, hash) {
+            if (!err) {
+                console.log(
+                    "The hash of our transaction is: ",
+                    hash,
+                    "\nCheck Alchemy's Mempool to view the status of our transaction!"
+                );
+            } else {
+                console.log(
+                    "Something went wrong when submitting our transaction:",
+                    err
+                );
+            }
+        }
+    );
+
 }
 
 async function main() {
     const ipfs = await IPFS.create();
     for await (const file of ipfs.ls(METADATA_CID)) {
-        console.log(file.name,' ',file.cid);
+        console.log(file.name, ' ', file.cid);
         await mintNFT(`https://ipfs.io/ipfs/${file.cid}`);
     }
     process.exit(0);
