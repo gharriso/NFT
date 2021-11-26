@@ -14,7 +14,7 @@ contract KmnNFT is ERC721URIStorage, Ownable {
     Counters.Counter private _tokenIds;
 
     // the name and symbol for the NFT
-    constructor() public ERC721("KileyMandalaNFT", "KMN") {}
+    constructor() public ERC721("KileyMandalaNFT", "JKM") {}
 
     // Create a function to mint/create the NFT
    // receiver takes a type of address. This is the wallet address of the user that should receive the NFT minted using the smart contract

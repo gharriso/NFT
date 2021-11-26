@@ -5,13 +5,13 @@ const IPFS = require('ipfs-core');
 
 const API_URL = process.env.API_URL;
 const METADATA_CID = process.env.METADATA_CID;
+const contractAddress = process.env.CONTRACT_ADDRESS
 
 const {
     createAlchemyWeb3
 } = require("@alch/alchemy-web3");
 const alchemyWeb3 = createAlchemyWeb3(API_URL);
 const contract = require("../artifacts/contracts/KileyMandalaNFT.sol/KmnNFT.json");
-const contractAddress = "0x500dBCf4b79099EEa72F58A732DEB42bF735C559";
 const nftContract = new alchemyWeb3.eth.Contract(contract.abi, contractAddress);
 
 const METAMASK_PUBLIC_KEY = process.env.METAMASK_PUBLIC_KEY;
@@ -31,28 +31,26 @@ async function mintNFT(tokenURI) {
             .createNFT(METAMASK_PUBLIC_KEY, tokenURI)
             .encodeABI(), // call the createNFT function from our OsunRiverNFT.sol file and pass the account that should receive the minted NFT.
     };
+    try {
+        const signedTx = await alchemyWeb3.eth.accounts.signTransaction(
+            tx,
+            METAMASK_PRIVATE_KEY
+        );
 
-    const signedTx = await alchemyWeb3.eth.accounts.signTransaction(
-        tx,
-        METAMASK_PRIVATE_KEY
-    );
-    await alchemyWeb3.eth.sendSignedTransaction(
-        signedTx.rawTransaction,
-        function (err, hash) {
-            if (!err) {
-                console.log(
-                    "The hash of our transaction is: ",
-                    hash,
-                    "\nCheck Alchemy's Mempool to view the status of our transaction!"
-                );
-            } else {
-                console.log(
-                    "Something went wrong when submitting our transaction:",
-                    err
-                );
-            }
-        }
-    );
+        let hash = await alchemyWeb3.eth.sendSignedTransaction(
+            signedTx.rawTransaction);
+        console.log(
+            "The hash of our transaction is: ",
+            hash.transactionHash,
+            "\nCheck Alchemy's Mempool to view the status of our transaction!"
+        );
+    } catch (error) {
+        console.log(
+            "Something went wrong when submitting our transaction:",
+            err, ' ', tokenURI
+        );
+    }
+
 
 }
 
