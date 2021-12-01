@@ -1,11 +1,14 @@
 require('dotenv').config();
 const IPFS = require('ipfs-core');
+const MongoClient = require('mongodb').MongoClient;
+
 
 
 
 const API_URL = process.env.API_URL;
 const METADATA_CID = process.env.METADATA_CID;
 const contractAddress = process.env.CONTRACT_ADDRESS
+const MONGODB_URI = process.env.MONGO_NFT;
 
 const {
     createAlchemyWeb3
@@ -49,17 +52,45 @@ async function mintNFT(tokenURI) {
             "Something went wrong when submitting our transaction:",
             err, ' ', tokenURI
         );
+        throw (error);
     }
 
 
 }
 
 async function main() {
-    const ipfs = await IPFS.create();
-    for await (const file of ipfs.ls(METADATA_CID)) {
-        console.log(file.name, ' ', file.cid);
-        await mintNFT(`https://ipfs.io/ipfs/${file.cid}`);
+    mongoclient = await MongoClient.connect(
+        MONGODB_URI, {});
+    mongodb = mongoclient.db();
+
+    let mandalas = await mongodb.collection('nftCatalog').find({
+        uploaded: false
+    }).toArray();
+
+    console.log(mandalas);
+
+    for (let mi = 0; mi < mandalas.length; mi++) {
+        let mandala = mandalas[mi];
+
+        try {
+            console.log(mandala.name);
+            await mintNFT(`https://ipfs.io/ipfs/${mandala.cid}`);
+            await mongodb.collection('nftCatalog').updateOne({
+                "_id": mandala["_id"]
+            }, {
+                $set: {
+                    uploaded: true
+                }
+            });
+        } catch (error) {
+            console.log(error.message);
+        }
     }
+
+    /* for await (const file of ipfs.ls(METADATA_CID)) {
+         console.log(file.name, ' ', file.cid);
+         await mintNFT(`https://ipfs.io/ipfs/${file.cid}`);
+     } */
     process.exit(0);
 }
 main();
